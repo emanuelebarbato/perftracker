@@ -1,0 +1,214 @@
+{% extends '_base.html' %}
+
+{% block title %}Comparisons{% endblock %}{% block title_tail %}<div class='pt_object_menu' id='pt_object_menu'></div>{% endblock %}
+
+{% block content %}
+
+<table id="comparisons" class="display dataTable" cellspacing="0" width="100%">
+  <thead>
+    <tr>
+      <th class='colExpander'></th>
+      <th class='colID'>ID</th>
+      <th class='colUpdated'>Updated</th>
+      <th class='colProject'>Project</th>
+      <th class='colEnv'>Env</th>
+      <th class='colHidden'>Version</th>
+      <th class='colTitle'>Comparison title</th>
+      <th class='colJobs'>Jobs</th>
+      <th class='colTests'>Tests</th>
+      <th class='colErrors'>Tests<br>with errors</th>
+      <th class='colTestCasess'>Test<br>cases</th>
+      <th class='colTCErrors'>Test cases<br>with errors</th>
+    </tr>
+  </thead>
+  <tfoot>
+    <tr>
+      <th class='colExpander'></th>
+      <th class='colID'>ID</th>
+      <th class='colUpdated'>Updated</th>
+      <th class='colProject'>Project</th>
+      <th class='colEnv'>Env</th>
+      <th class='colHidden'>Version</th>
+      <th class='colTitle'>Comparison title</th>
+      <th class='colJobs'>Jobs</th>
+      <th class='colTests'>Tests</th>
+      <th class='colErrors'>Tests<br>with errors</th>
+      <th class='colTestCasess'>Test<br>cases</th>
+      <th class='colTCErrors'>Test cases<br>with errors</th>
+    </tr>
+  </tfoot>
+</table>
+
+
+<script>
+$(document).ready(function() {
+
+    $("<a window=_blank onclick=\"window.location.replace('/{0}/job/?edit=0');return false;\" >New comparison</a>".ptFormat({{ project.id }})).appendTo("#pt_object_menu")
+
+    /*
+     * 1. Comparisons list table
+     */
+    var project_visible = true;
+    {% if project.id != 0 %}
+    project_visible = false;
+    {% endif %}
+
+    var table = $('#comparisons').DataTable( {
+        "processing": true,
+        "serverSide": false,
+        "lengthMenu": [[50, 200, 1000, -1], [50, 200, 1000, "All"]],
+        "ajax": "/api/v{{ api_ver }}/{{ project.id }}/comparison/",
+        "order": [[ 2, "desc" ]],
+        "columns": [
+            {
+                "className": 'pt_row_details_toggle',
+                "orderable": false,
+                "data":      null,
+                "defaultContent": "<span class='glyphicon glyphicon-triangle-right' aria-hidden='true'></span>",
+            },
+            {
+                "data": function ( row, type, val, meta ) {
+                    if (type === "sort") {
+                        return row.id;
+                    }
+                    return "<a href='/{0}/comparison/{1}'>{2}</a>".ptFormat(row.project.id, row.id, row.id);
+                }
+            },
+            {
+                "data": function ( row, type, val, meta ) {
+                    if (type === "sort") {
+                        return row.updated;
+                    }
+                    return pt_date2str(row.updated);
+                },
+                "orderData": [ 2, 1 ],
+                "type": "date",
+            },
+            {
+                "data": "project.name",
+                "orderData": [ 3, 1 ],
+                "visible": project_visible,
+            },
+            {
+                "data": function ( row, type, val, meta ) {
+                    return row.env_node.map(env => env.display_name || '').join(", ");
+                },
+                "orderData": [4, 1],
+            },
+            {
+                "data": "suite_ver",
+                "orderData": [ 5, 1 ],
+            },
+            {
+                "data": "title",
+                "orderData": [ 6, 1 ],
+            },
+            {
+                "data": "jobs",
+                "type": "integer",
+                "orderData": [ 7, 1 ],
+                "render": function ( data, type, row ) {
+                    return data.length || '';
+                },
+            },
+            {
+                "data": function ( row, type, val, meta ) {
+                    if (type === "sort") {
+                        return Math.max(...row.tests_total);
+                    }
+                    return row.tests_total.join(", ");
+                },
+                "orderData": [ 8, 1 ],
+            },
+            {
+                "data": function ( row, type, val, meta ) {
+                    if (type === "sort") {
+                        return Math.max(...row.tests_errors);
+                    }
+                    return row.tests_errors.join(", ");
+                },
+                "orderData": [ 9, 1 ],
+                "createdCell": function (td, cellData, rowData, row, col) {
+                    if (Math.max(...rowData.tests_errors) > 0) {
+                        $(td).addClass('pt_test_errors');
+                    }
+                },
+            },
+            {
+                "data": function ( row, type, val, meta ) {
+                    if (type === "sort") {
+                        return Math.max(...row.testcases_total);
+                    }
+                    return row.testcases_total.join(", ");
+                },
+                "orderData": [ 10, 1 ],
+            },
+            {
+                "data": function ( row, type, val, meta ) {
+                    if (type === "sort") {
+                        return Math.max(...row.testcases_errors);
+                    }
+                    return row.testcases_errors.join(", ");
+                },
+                "orderData": [ 11, 1 ],
+                "createdCell": function (td, cellData, rowData, row, col) {
+                    if (Math.max(...rowData.testcases_errors) > 0) {
+                        $(td).addClass('pt_test_errors');
+                    }
+                },
+            },
+        ],
+        "columnDefs": [
+            {
+                "targets": [ "colHidden" ],
+                "visible": false,
+            }
+        ],
+    });
+
+    /*
+     * 2. Comparison details
+     */
+    $("#comparisons").on('click', 'td.pt_row_details_toggle', function() {
+        var tr = $(this).closest('tr');
+        var row = table.row( tr );
+        var id = row.data().id;
+
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            $(this)[0].innerHTML = "<span class='glyphicon glyphicon-triangle-right' aria-hidden='true'></span>";
+            $('#comparison_details_slider_{0}'.ptFormat(id), row.child()).slideUp(function() {
+                row.child.hide()
+                tr.removeClass('shown');
+            });
+        }
+        else {
+            $(this)[0].innerHTML = "<span class='glyphicon glyphicon-triangle-bottom' aria-hidden='true'></span>";
+            $.ajax({
+                url: '/api/v{{ api_ver }}/{{ project.id }}/comparison/{0}'.ptFormat(id),
+                cache: true,
+                data: null,
+                type: 'GET',
+                timeout: 2000,
+                success: function(data, status) {
+                    row.child(pt_draw_comparison_details(data, null)).show();
+                    tr.next('tr').children().toggleClass('pt_row_details');
+                    tr.addClass('shown');
+                    $('#env_nodes_{0}'.ptFormat(id)).treetable({expandable: true});
+                    $('#comparison_details_slider_{0}'.ptFormat(id), row.child()).slideDown();
+                },
+                error: function(data, status, error) {
+                    row.child(pt_draw_comparison_details(row.data(), error)).show();
+                    tr.next('tr').children().toggleClass('pt_row_details');
+                    tr.addClass('shown');
+                    $('#comparison_details_slider_{0}'.ptFormat(id), row.child()).slideDown();
+                }
+            });
+        }
+    });
+
+    $("#pt_object_menu").html(pt_draw_comparisons_menu({{ project.id}}));
+});
+</script>
+
+{% endblock %}

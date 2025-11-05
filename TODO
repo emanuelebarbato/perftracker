@@ -1,0 +1,161 @@
+View:
+- icon
++ version
+
+Authentication:
++ login form
++ sign in
+
+Authorization:
+- hidden screens for non-authorized users
+
+Jobs list:
++ fix sorting
++ fix search
++ fix paging
++ job details: env info
++ job details: json download
+- job details: xls download
++ job details: job delete
+- job details: which comparisons refer to the job?
+- job details: clear cache(s) (?)
+- job details: re-import (?)
+- job details: suite details
++ job details: rename job (name entered by user overrides the initial one)
++ job details: delete job
++ add to comparison button
++ comparison dialog
++ comparison dialog: charts types
++ comparison dialog: tables types
++ comparison dialog: tests type
++ comparison dialog: values type
+- comparison dialog: public / hidden
++ comparison dialog: submit button
+- comparison dialog: preview button
++ comparison dialog: cancel button
+- comparison dialog: 'back' button doesn't work after creating the comparison
+
+Job view:
++ job details
++ results table
++ test details
+- link jobs to real hosts
+- switch between table mode and charts mode
+
+Comparisons
++ table
++ comparison details
++ comparison edit dialog
++ comparison auto title generator
++ delete comparison
++ comparison items ordering
+
+Comparison view:
+- highlights / thumbnails
++ results table
+- results table: draw chart of individual scores
++ detailed charts
++ results details: jobs
++ results details: grafana link
++ results details: cmdline
++ results details: description
++ results details: start, end, duration
++ results details: iterations data, min, max, avg
++ sections collapse
+- charts: autocolors
+- charts: find common prefix/suffix in y-asix values and set y-axis legend
+- charts: auto chart type 
+- charts: line/bar charts with confidence interval
+- charts: ability to change chart type in report and save
+- charts: add an option to see the table
++ charts: fix an issue on the chart when job A has test1 score and job B has only test2 score
+- charts: filter by test name
+
+Job Upload
++ json upload
++ test results: group
++ test results: serie
++ test results: cmdline
++ test results: tag
++ test results: iterations
++ test results: metrics
++ test results: time
++ test results: loops
++ test results: threads
+- test results: error messages
+- test results: warning messages
+- test results: links key:value (logs, grafana, ...)
+- test results: custom data (json)
++ envs
+- hw chassis
+- products: version
+- products: name
+- links: key:value (login to UI, config blob, grafana)
+- author
+- return job id in upload results
+- proper error message format in case of upload failure
+
+Artifacts management
++ custom test artifact upload (logs, dumps, etc)
++ on-flight compression
++ inline or as-attachment view in the browser
++ manual update/deletion
+- automated garbage collection
+- links in the test details
++ links in the job details
+
+Hosts view
+- hosts status
+- short grafana-like CPU usage
++ manual hosts locking form
++ host locking API
+- show locks history in the host details view
++ cusom lock types/colors
+- daily host hardware profile update (if ssh credentials/key provided)
+
+Links view
+- custom link group
+- custom link text / url
+
+Custom screens
+- rendered by cmdline
+- rendered as frame
+
+DB access
++ DB query logging
+- DB query optimization (don't fetch the same objects several times)
+
+Regressions
+- New regression (title, tag)
++ Regression charts
++ Support --regression-tag in suites
+- Automated first two vs last two builds comparison for regressions
++ Automated regression creation
++ Show the list of jobs in regression. Add possibility to include/exclude jobs from regression
+- Edit regression title
+- Show/Hide groups
+- Exclude tests from regressions
+- Show total number of jobs in the regression on the regression view
+- Manual recognition of regression test drop
+- Regression details: full screen width regression view
+- Regression details: show the performance bugs timings below the regression chart
+- Regression details: show the commits below the regression chart
+
+Integrations with Jira
+- Custom fields for dashboards
+- Items hierarchy by filter
+- Jira items lifecycle on the regression chart
+
+Admin:
+- pre-defined groups and permissions and admin panel
+- hide First Job, Last Job, Jobs field in regression management
+- users management howto
+
+Mass management:
+- mass change of less_better test value to opposite value
+
+--------------
+
+Legend:
+'+' means done
+'-' means Todo

@@ -1,12 +1,28 @@
-# Core dependencies
-requests>=2.31.0
-urllib3>=2.0.0
+# PerfTracker Django application
+django
+django-echarts
+django-datatables-view
+django-request-logging
+djangorestframework
+django-bootstrap3
+django-group-by
+perftrackerlib>=0.0.40
+pillow
+psycopg2
+lorem
+python-ldap
+django-auth-ldap
+pytz
+gunicorn
 
-# Data processing
+# Data processing (shared)
 numpy>=1.24.0
 scipy>=1.11.0
+python-dateutil
 
-# LLM integration
+# AI Analysis tools (for perftracker_connector.py)
+requests>=2.31.0
+urllib3>=2.0.0
 ollama>=0.1.0
 
 # Optional: for enhanced analysis

@@ -1,0 +1,210 @@
+{% extends '_base.html' %}
+
+{% block title %}Job: #{{ obj.id }} / {{ obj.title }}{% endblock %}
+{% block title_tail %}
+{% if obj.deleted == True %}
+  <div class='pt_deleted'>DELETED</div>
+{% endif %}
+<div class='pt_object_menu' id='pt_object_menu'></div>
+{% endblock %}
+
+{% block content %}
+
+{% include 'job_id_edit.html' %}
+
+<div class='pt_section'>
+<h3 class='pt_collapse collapsed' data-toggle="collapse" data-target="#details">Details</h3>
+<div class='container collapse container' id='details'>
+  <div id='job_details_{{ obj.id }}'></div>
+</div>
+</div>
+
+<h3>Results</h3>
+<div class="container">
+  <table id="tests" class="display dataTable" cellspacing="0" width="100%">
+    <thead>
+      <tr>
+        <th class='colExpander'></th>
+        <th class='colId'></th>
+        <th class='colSeqNum'>#</th>
+        <th class='colGroup'>Group</th>
+        <th class='colTag'>Tag</th>
+        <th class='colCategory'></th>
+        <th class='colDuration'>Duration (sec)</th>
+        <th class='colScore'>Score</th>
+        <th class='colPlusmin'>&plusmn; %</th>
+        <th class='colErrors'>Errors</th>
+        <th class='colStatus'></th>
+      </tr>
+    </thead>
+    <tfoot>
+      <tr>
+        <th class='colExpander'></th>
+        <th class='colId'></th>
+        <th class='colSeqNum'>#</th>
+        <th class='colGroup'>Group</th>
+        <th class='colTag'>Tag</th>
+        <th class='colCategory'></th>
+        <th class='colDuration'>Duration (sec)</th>
+        <th class='colScore'>Score</th>
+        <th class='colPlusmin'>&plusmn; %</th>
+        <th class='colErrors'>Errors</th>
+        <th class='colStatus'></th>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+<script>
+
+
+function pt_tests_repopulate(table, group_id)
+{
+    if (typeof group_id == 'undefined')
+        return;
+
+    var link = "/api/v{{ api_ver }}/{{ project.id }}/job/{{ obj.id }}/group/{0}/test/".ptFormat(group_id);
+
+    table.ajax.url(link).load(null, true);
+}
+
+$(document).ready(function() {
+    var id = {{ obj.id }};
+
+    pt_ajax_job_details('{{ api_ver }}', {{ project.id }}, id, false);
+
+    var table = $('#tests').DataTable( {
+        "processing": true,
+        "serverSide": true,
+        "lengthMenu": [[50, 20, 200, 1000, -1], [50, 20, 200, 1000, "All"]],
+        "ajax": "/api/v{{ api_ver }}/{{ project.id }}/job/{{ obj.id }}/group/0/test/",
+        "order": [[ 2, "asc" ]],
+        "columns": [
+            {
+                "className": 'pt_row_details_toggle',
+                "orderable": false,
+                "data":      null,
+                "defaultContent": "<span class='glyphicon glyphicon-triangle-right' aria-hidden='true'></span>",
+            },
+            { "data": "id" },
+            { "data": "seq_num" },
+            { "data": "group" },
+            { "data": "tag" },
+            { "data": "category" },
+            { "data": "duration" },
+            { "data": "avg_score" },
+            { "data": "avg_plusmin" },
+            { "data": "errors" },
+            { "data": "status" }
+        ],
+        "columnDefs": [
+            {
+                "targets": "colGroup",
+                "className": 'pt_left',
+                "type": "string",
+                "render": function ( data, type, row ) {
+                    return data;
+                }
+            },
+            {
+                "targets": "colTag",
+                "className": 'pt_left',
+                "type": "string",
+                "render": function ( data, type, row ) {
+                    if (row.category)
+                       return data + " {" + row.category + "}";
+                    return data;
+                }
+            },
+            {
+                "targets": "colPlusmin",
+                "type": "string",
+                "render": function ( data, type, row ) {
+                    return data;
+                }
+            },
+            {
+                "targets": [ "colId", "colCategory", "colStatus" ],
+                "type": "string",
+                "visible": false
+            },
+            {
+                "targets": "colErrors",
+                "type": "string",
+                "createdCell": function( td, cellData, rowData, row, col) {
+                    var ctl = $(td).text(test_errors2str(rowData));
+                    if (rowData.errors || rowData.status === 'FAILED') {
+                        ctl.addClass('pt_test_errors')
+                    }
+                }
+            }
+        ]
+    });
+
+    // Add event listener for opening and closing details
+    $('#tests').on('click', 'td.pt_row_details_toggle', function () {
+        // FIXME, merge with jobs.html
+        var tr = $(this).closest('tr');
+        var row = table.row( tr );
+        var id = row.data().id;
+
+        if ( row.child.isShown() ) {
+            // This row is already open - close it
+            $(this)[0].innerHTML = "<span class='glyphicon glyphicon-triangle-right' aria-hidden='true'></span>";
+            $('#test_details_slider_{0}'.ptFormat(id), row.child()).slideUp(function() {
+                row.child.hide()
+                tr.removeClass('shown');
+            });
+        }
+        else {
+            $(this)[0].innerHTML = "<span class='glyphicon glyphicon-triangle-bottom' aria-hidden='true'></span>";
+            $.ajax({
+                url: '/api/v{{ api_ver }}/{{ project.id }}/job/{{ obj.id }}/group/0/test/{0}'.ptFormat(id),
+                cache: true,
+                data: null,
+                type: 'GET',
+                timeout: 2000,
+                success: function(data, status) {
+                    row.child(pt_job_test_details_draw(data, null)).show();
+                    tr.next('tr').children().toggleClass('pt_row_details');
+                    tr.addClass('shown');
+                    $('#test_details_slider_{0}'.ptFormat(id), row.child()).slideDown();
+                },
+                error: function(data, status, error) {
+                    row.child(pt_job_test_details_draw(row.data(), error)).show();
+                    tr.next('tr').children().toggleClass('pt_row_details');
+                    tr.addClass('shown');
+                    $('#test_details_slider_{0}'.ptFormat(id), row.child()).slideDown();
+                }
+            });
+        }
+    });
+
+    /* Test group switch handler */
+    $('#tests_filter').after("<div id='tests_group_selector' class='pt_tests_group_selector'>Group filter: <select></select></div>");
+    $.ajax({
+        url: '/api/v{{ api_ver }}/{{ project.id }}/job/{0}/group/'.ptFormat({{ obj.id }}),
+        cache: true,
+        data: null,
+        type: 'GET',
+        timeout: 2000,
+        success: function(data, status) {
+            var selector = $('#tests_group_selector').children('select');
+            selector.append($('<option>', {value: 0, text: ''}));
+            $.each(data, function(i, item) {
+                selector.append($('<option>', {value: item.id, text: item.title}));
+            });
+            selector.change(function() {
+                pt_tests_repopulate(table, this.value);
+            });
+        },
+        error: function(data, status, error) {
+            $('#tests_group_selector').html(pt_draw_ajax_error(error));
+        }
+    });
+
+    $('#pt_object_menu').html(pt_draw_job_menu({{ obj.id }}, '{{ obj.deleted }}'));
+});
+</script>
+
+{% endblock %}

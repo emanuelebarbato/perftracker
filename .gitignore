@@ -1,5 +1,6 @@
 # Python
 __pycache__/
+*__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -24,6 +25,11 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+# PerfTracker specific
+db.sqlite3
+perftracker.log
+local_settings.py
 
 # Data and reports (too large for git)
 data/*.json
