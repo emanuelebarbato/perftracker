@@ -337,19 +337,19 @@ Examples:
   # Auto-discovery: Latest GRPM jobs (recommended)
   python3 perftracker_connector.py --product GRPM --upload
   
-  # Auto-discovery: Latest function-dispatcher jobs
+  # Auto-discovery: Any product/component
   python3 perftracker_connector.py --product function-dispatcher --upload
+  python3 perftracker_connector.py --product TaskManager --project 13
+  python3 perftracker_connector.py --product MyNewProduct --project 5
   
   # Manual mode: Specify exact job IDs
   python3 perftracker_connector.py 82221 82443 --upload
-  
-  # Specify different project
-  python3 perftracker_connector.py --product GRPM --project 2
   
   # Use different PerfTracker server
   python3 perftracker_connector.py --product GRPM --url https://other-pt.example.com
 
 Note: No authentication required! Your PerfTracker instance is open access.
+Product name must match the 'product_name' field in PerfTracker exactly.
         """
     )
     
@@ -368,8 +368,7 @@ Note: No authentication required! Your PerfTracker instance is open access.
     parser.add_argument(
         "--product",
         type=str,
-        choices=["GRPM", "function-dispatcher"],
-        help="Product name for auto-discovery (GRPM or function-dispatcher)"
+        help="Product name for auto-discovery (e.g., GRPM, function-dispatcher, TaskManager, MyNewProduct)"
     )
     parser.add_argument(
         "--project",
